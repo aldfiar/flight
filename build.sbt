@@ -4,6 +4,8 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+
 resolvers += Resolver.jcenterRepo
 
 val akka = "com.typesafe.akka"
@@ -34,7 +36,7 @@ val loggingDependencies = Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalatest" % "scalatest_2.10" % scalaTestVersion % "test",
+  "org.scalatest" % "scalatest_2.12" % scalaTestVersion % "test",
   "org.json4s" %% "json4s-jackson" % "3.2.11",
 )
 libraryDependencies ++= akkaDependencies
