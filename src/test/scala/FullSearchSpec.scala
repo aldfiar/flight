@@ -12,33 +12,58 @@ import scala.concurrent.duration._
 
 class FullSearchSpec extends FlatSpec with Matchers with ScalaFutures with BeforeAndAfterAll with HttpClient with JsonProtocol {
 
-  override implicit def patienceConfig: PatienceConfig = PatienceConfig(5 seconds)
-  implicit val ec = system.dispatcher
-  private val userAgentHeader = headers.`User-Agent`.apply("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36")
-
   override val log: LoggingAdapter = Logging(system.eventStream, "full.search.spec")
 
-  "Full Search" should "return search travel result" in {
-    val query = Map("context" -> "travel", "version" -> "1.3")
-    val baseRequest: HttpRequest = ApiMethods.fullSearchRequests(query)
+  override implicit def patienceConfig: PatienceConfig = PatienceConfig(5 seconds)
+
+  implicit val ec = system.dispatcher
+
+  private val userAgentHeader = headers.`User-Agent`.apply("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36")
+
+  private val baseRequest = appendQuery(ApiMethods.fullSearchRequests)
+
+  private val responseFunction =  addEntity.tupled andThen addHeader andThen sendRequest
+
+  "Full Search for known address" should "return non empty result" in {
     val payload = FilledSearchPayload(text = "Москва").toJson.toString()
 
-    val entity = HttpEntity(ContentTypes.`application/json`, payload)
-    val request = baseRequest.withEntity(entity).withHeaders(List(userAgentHeader))
-    val response = process(request)
+    val response = responseFunction(baseRequest, payload)
 
     whenReady(response) { r =>
       r.status shouldBe StatusCodes.OK
       whenReady(Unmarshal(r.entity).to[FullSearchMessage]) { message =>
         message.status shouldBe "Ok"
+        val payload = message.payload
+        payload.sortedByScoreObjects.size shouldNot be
+        0
       }
     }
   }
+
+  "Full Search for wrong address" should "return empty result" in {
+    val payload = FilledSearchPayload(text = "").toJson.toString()
+
+    val response = responseFunction(baseRequest, payload)
+
+    whenReady(response) { r =>
+      r.status shouldBe StatusCodes.OK
+      whenReady(Unmarshal(r.entity).to[FullSearchMessage]) { message =>
+        message.status shouldBe "Ok"
+        val payload = message.payload
+        payload.sortedByScoreObjects.size shouldBe 0
+      }
+    }
+  }
+
+  def appendQuery(f: Map[String, String] => HttpRequest) = f(Map("context" -> "travel", "version" -> "1.3"))
+
+  def addHeader = (h: HttpRequest) => h.withHeaders(List(userAgentHeader))
+
+  def addEntity = (h: HttpRequest, payload: String) => h.withEntity(HttpEntity(ContentTypes.`application/json`, payload))
 
   override def afterAll(): Unit = {
     system.terminate()
     log.debug("Shutdown")
   }
-
 
 }

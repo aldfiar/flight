@@ -1,7 +1,7 @@
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, ResponseEntity}
+import akka.http.scaladsl.model.{HttpRequest, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
 import akka.stream.ActorMaterializer
 
@@ -16,9 +16,7 @@ trait HttpClient {
 
   val log: LoggingAdapter
 
-  def process(request: HttpRequest): Future[HttpResponse] = {
-    Http().singleRequest(request)
-  }
+  def sendRequest = (request: HttpRequest) => Http().singleRequest(request)
 
   private def deserialize[T](value: ResponseEntity)(implicit um: Unmarshaller[ResponseEntity, T]): Future[T] = {
     Unmarshal(value).to[T]
