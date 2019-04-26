@@ -1,4 +1,4 @@
-import akka.event.Logging
+import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import json.JsonProtocol
@@ -9,14 +9,14 @@ import platform.ApiMethods
 import spray.json._
 
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 class FullSearchSpec extends FlatSpec with Matchers with ScalaFutures with BeforeAndAfterAll with HttpClient with JsonProtocol {
-  private val log = Logging(system.eventStream, "full.search.spec")
+
+  override implicit def patienceConfig: PatienceConfig = PatienceConfig(5 seconds)
   implicit val ec = system.dispatcher
   private val userAgentHeader = headers.`User-Agent`.apply("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36")
 
-  override implicit def patienceConfig: PatienceConfig = PatienceConfig(10 seconds)
+  override val log: LoggingAdapter = Logging(system.eventStream, "full.search.spec")
 
   "Full Search" should "return search travel result" in {
     val query = Map("context" -> "travel", "version" -> "1.3")

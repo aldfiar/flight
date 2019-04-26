@@ -1,4 +1,5 @@
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
@@ -12,6 +13,8 @@ trait HttpClient {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
+  val log: LoggingAdapter
 
   def process(request: HttpRequest): Future[HttpResponse] = {
     Http().singleRequest(request)
