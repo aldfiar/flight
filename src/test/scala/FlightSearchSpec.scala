@@ -5,7 +5,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.model.{HttpRequest, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import json.JsonProtocol
-import message.{FullSearchMessage, Passengers, SearchFlightPayload, SearchMessage, Segments}
+import message.{Passengers, SearchFlightPayload, SearchMessage, Segments}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import platform.ApiMethods
@@ -22,18 +22,15 @@ class FlightSearchSpec extends FlatSpec with Matchers with ScalaFutures with Bef
 
   override protected val baseRequest: HttpRequest = ApiMethods.searchFlight
 
-  object FlightClasses extends Enumeration {
-
-    protected case class Val(code: String) extends super.Val {}
-
-    val Economy = Val("Y")
-    val Business = Val("C")
-    val FirstClass = Val("F")
+  def createSegment(daysFromNow: Int, destination: String, arrival: String): Segments = {
+    val now = LocalDate.now()
+    val dateFrom = now.plus(daysFromNow, ChronoUnit.DAYS)
+    Segments(from = destination, to = arrival, date = dateFrom.toString)
   }
 
   "Search in two directions" should "return result" in {
     val segments = createSegment(1, "LED", "DLA") :: createSegment(13, "DLA", "LED") :: Nil
-    val body = SearchFlightPayload(segments,Passengers(adults=1),FlightClasses.Economy.code)
+    val body = SearchFlightPayload(segments, Passengers(adults = 1), FlightClasses.Economy.code)
     val payload = body.toJson.toString()
 
     val response = responseFunction(baseRequest, payload)
@@ -48,8 +45,8 @@ class FlightSearchSpec extends FlatSpec with Matchers with ScalaFutures with Bef
   }
 
   "Search in one direction" should "return result" in {
-    val segments = createSegment(1, "LED", "DLA") ::  Nil
-    val body = SearchFlightPayload(segments,Passengers(adults=1),FlightClasses.Economy.code)
+    val segments = createSegment(1, "LED", "DLA") :: Nil
+    val body = SearchFlightPayload(segments, Passengers(adults = 1), FlightClasses.Economy.code)
     val payload = body.toJson.toString()
 
     val response = responseFunction(baseRequest, payload)
@@ -64,8 +61,8 @@ class FlightSearchSpec extends FlatSpec with Matchers with ScalaFutures with Bef
   }
 
   "Search in non existing direction" should "return empty result" in {
-    val segments = createSegment(1, "FER", "DLA") ::  Nil
-    val body = SearchFlightPayload(segments,Passengers(adults=1),FlightClasses.Economy.code)
+    val segments = createSegment(1, "FER", "DLA") :: Nil
+    val body = SearchFlightPayload(segments, Passengers(adults = 1), FlightClasses.Economy.code)
     val payload = body.toJson.toString()
 
     val response = responseFunction(baseRequest, payload)
@@ -79,10 +76,13 @@ class FlightSearchSpec extends FlatSpec with Matchers with ScalaFutures with Bef
     }
   }
 
-  def createSegment(daysFromNow:Int, destination:String, arrival:String): Segments ={
-    val now = LocalDate.now()
-    val dateFrom = now.plus(daysFromNow, ChronoUnit.DAYS)
-    Segments(from=destination,to=arrival, date=dateFrom.toString)
+  object FlightClasses extends Enumeration {
+
+    val Economy = Val("Y")
+    val Business = Val("C")
+    val FirstClass = Val("F")
+
+    protected case class Val(code: String) extends super.Val {}
   }
 
 }

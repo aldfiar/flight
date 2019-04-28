@@ -7,13 +7,6 @@ import akka.http.scaladsl.model._
 object ApiMethods {
 
   private val host = "api.tinkoff.ru"
-
-  private def createUri = (path: String) => Uri.from(scheme = "https", host = host, path = path)
-
-  private def postRequestWithUri = (uri: Uri) => HttpRequest(POST, uri = uri)
-
-  private def addQuery = (uri:Uri, values: Map[String, String]) => uri.withQuery(Query(values))
-
   private val createRequest = addQuery.tupled andThen postRequestWithUri
 
   def fullSearchRequests(values: Map[String, String]): HttpRequest = {
@@ -25,4 +18,10 @@ object ApiMethods {
     val path = "/travel/api/flight/search"
     postRequestWithUri(createUri(path))
   }
+
+  private def createUri = (path: String) => Uri.from(scheme = "https", host = host, path = path)
+
+  private def postRequestWithUri = (uri: Uri) => HttpRequest(POST, uri = uri)
+
+  private def addQuery = (uri: Uri, values: Map[String, String]) => uri.withQuery(Query(values))
 }

@@ -1,10 +1,9 @@
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, ResponseEntity, headers}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
 import akka.stream.ActorMaterializer
-import platform.ApiMethods
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -19,19 +18,19 @@ trait HttpClient {
 
   protected val log: LoggingAdapter
 
-  protected val baseRequest:HttpRequest
+  protected val baseRequest: HttpRequest
 
   protected val responseFunction = addEntity.tupled andThen addHeader andThen sendRequest
 
   protected def sendRequest = (request: HttpRequest) => Http().singleRequest(request)
 
-  private def deserialize[T](value: ResponseEntity)(implicit um: Unmarshaller[ResponseEntity, T]): Future[T] = {
-    Unmarshal(value).to[T]
-  }
-
   protected def addHeader = (h: HttpRequest) => h.withHeaders(List(userAgentHeader))
 
   protected def addEntity = (h: HttpRequest, payload: String) => h.withEntity(HttpEntity(ContentTypes.`application/json`, payload))
+
+  private def deserialize[T](value: ResponseEntity)(implicit um: Unmarshaller[ResponseEntity, T]): Future[T] = {
+    Unmarshal(value).to[T]
+  }
 
 }
 

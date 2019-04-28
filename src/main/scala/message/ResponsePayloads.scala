@@ -46,7 +46,7 @@ case class Carriers(operating: String, marketing: String)
 
 case class BaggageExternal(amount: Int, unit_desc: String)
 
-case class Baggage (count: Int, baggage: BaggageExternal)
+case class Baggage(count: Int, baggage: BaggageExternal)
 
 case class FlightSegments(number: Int, duration: Int, vehicle: String, availability: Int, cabin: String, booking_class: String, ancillary_services: Option[String], carriers: Carriers, departure: Departure, baggage: Seq[Baggage], arrival: Departure, technical_stops: Option[Seq[String]])
 
