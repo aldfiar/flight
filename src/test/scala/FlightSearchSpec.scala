@@ -63,6 +63,22 @@ class FlightSearchSpec extends FlatSpec with Matchers with ScalaFutures with Bef
     }
   }
 
+  "Search in non existing direction" should "return empty result" in {
+    val segments = createSegment(1, "FER", "DLA") ::  Nil
+    val body = SearchFlightPayload(segments,Passengers(adults=1),FlightClasses.Economy.code)
+    val payload = body.toJson.toString()
+
+    val response = responseFunction(baseRequest, payload)
+
+    whenReady(response) { r =>
+      r.status shouldBe StatusCodes.OK
+      whenReady(Unmarshal(r.entity).to[SearchMessage]) { message =>
+        message.status shouldBe "Ok"
+        message.payload.offers.size shouldBe 0
+      }
+    }
+  }
+
   def createSegment(daysFromNow:Int, destination:String, arrival:String): Segments ={
     val now = LocalDate.now()
     val dateFrom = now.plus(daysFromNow, ChronoUnit.DAYS)
