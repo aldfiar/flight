@@ -21,8 +21,8 @@ object ApiMethods {
     createRequest(createUri(path), values)
   }
 
-  def searchFlight(values: Map[String, String]): HttpRequest = {
+  def searchFlight(): HttpRequest = {
     val path = "/travel/api/flight/search"
-    createRequest(createUri(path), values)
+    postRequestWithUri(createUri(path))
   }
 }
