@@ -1,7 +1,13 @@
 package message
 
 trait Message[Z] {
-  def payload: Z
+  val payload: Z
+}
+
+trait TrackMessage[Z] extends Message[Z] {
+  val trackingId: String
+  val time: String
+  val status: String
 }
 
 case class UidPayload(wuid: String)
@@ -26,4 +32,24 @@ case class ScoreObject(highlights: List[Highlight], score: Double, objectType: S
 
 case class FullSearchPayload(tookInMillis: Int, hitsCount: Int, sortedByScoreObjects: List[ScoreObject], suggest: Option[List[String]])
 
-case class FullSearchMessage(payload: FullSearchPayload, trackingId: String, time: String, status: String) extends Message[FullSearchPayload]
+case class FullSearchMessage(payload: FullSearchPayload, trackingId: String, time: String, status: String) extends TrackMessage[FullSearchPayload]
+
+case class Price(amount: String, currency: String)
+
+case class PricePerPax(adult: Price, child: String, infant: String)
+
+case class Departure(city: String, airport: String, terminal: String, time: String)
+
+case class Carriers(operating: String, marketing: String)
+
+case class FlightSegments(number: Int, duration: Int, vehicle: String, availability: Int, cabin: String, booking_class: String, ancillary_services: String, carriers: Carriers, departure: Departure, baggage: Seq[], arrival: Departure, technical_stops: Seq[])
+
+case class Flights(flight_segments: Seq[FlightSegments], duration: Int)
+
+case class Info(carrierNames: Map[String, String], vehicleNames: Map[String, String], cities: Map[String, String], airportNames: Map[String, String])
+
+case class Offers(uuid: String, price: Price, flights: Seq[Int], alliance: String, price_per_pax: PricePerPax, validating_carrier: String, refundable: Boolean)
+
+case class SearchPayload(offers: Seq[Offers], flights: Seq[Flights], info: Info)
+
+case class SearchMessage(payload: SearchPayload, trackingId: String, time: String, status: String) extends TrackMessage[SearchPayload]
