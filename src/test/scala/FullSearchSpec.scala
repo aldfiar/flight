@@ -21,11 +21,7 @@ class FullSearchSpec extends FlatSpec with Matchers with ScalaFutures with Befor
 
   implicit val ec = system.dispatcher
 
-  private val userAgentHeader = headers.`User-Agent`("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.109 Safari/537.36")
-
-  private val baseRequest = appendQuery(ApiMethods.fullSearchRequests)
-
-  private val responseFunction = addEntity.tupled andThen addHeader andThen sendRequest
+  override val baseRequest = appendQuery(ApiMethods.fullSearchRequests)
 
   "Full Search for known address" should "return non empty result" in {
     val payload = FilledSearchPayload(text = "Москва").toJson.toString()
@@ -37,9 +33,7 @@ class FullSearchSpec extends FlatSpec with Matchers with ScalaFutures with Befor
       whenReady(Unmarshal(r.entity).to[FullSearchMessage]) { message =>
         message.status shouldBe "Ok"
         checkTime(message.time)
-        val payload = message.payload
-        payload.sortedByScoreObjects.size shouldNot be
-        0
+        message.payload.sortedByScoreObjects.size should be > 0
       }
     }
   }
@@ -54,8 +48,7 @@ class FullSearchSpec extends FlatSpec with Matchers with ScalaFutures with Befor
       whenReady(Unmarshal(r.entity).to[FullSearchMessage]) { message =>
         message.status shouldBe "Ok"
         checkTime(message.time)
-        val payload = message.payload
-        payload.sortedByScoreObjects.size shouldBe 0
+        checkSizeEqualsHitsCount(message, 0)
       }
     }
   }
@@ -72,21 +65,22 @@ class FullSearchSpec extends FlatSpec with Matchers with ScalaFutures with Befor
         val payload = message.payload
         checkTime(message.time)
         //Как Иллинойс Валлей связан с Валинором
-        payload.sortedByScoreObjects.size shouldBe 1
+        checkSizeEqualsHitsCount(message, 1)
         val source = payload.sortedByScoreObjects(0).objectSource
         source.name.ru shouldBe "Иллинойс Валлей"
       }
     }
   }
 
+  def checkSizeEqualsHitsCount(message: FullSearchMessage, size: Int): Unit = {
+    val payload = message.payload
+    val objectsQuantity = payload.sortedByScoreObjects.size
+    objectsQuantity shouldBe size
+  }
 
   def checkTime = (t: String) => Instant.from(ZonedDateTime.parse(t)).truncatedTo(ChronoUnit.MINUTES) shouldBe Instant.now().truncatedTo(ChronoUnit.MINUTES)
 
   def appendQuery(f: Map[String, String] => HttpRequest) = f(Map("context" -> "travel", "version" -> "1.3"))
-
-  def addHeader = (h: HttpRequest) => h.withHeaders(List(userAgentHeader))
-
-  def addEntity = (h: HttpRequest, payload: String) => h.withEntity(HttpEntity(ContentTypes.`application/json`, payload))
 
   override def afterAll(): Unit = {
     system.terminate()
