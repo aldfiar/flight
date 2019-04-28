@@ -34,22 +34,28 @@ case class FullSearchPayload(tookInMillis: Int, hitsCount: Int, sortedByScoreObj
 
 case class FullSearchMessage(payload: FullSearchPayload, trackingId: String, time: String, status: String) extends TrackMessage[FullSearchPayload]
 
+case class City(name: String, country: String)
+
 case class Price(amount: String, currency: String)
 
-case class PricePerPax(adult: Price, child: String, infant: String)
+case class PricePerPax(adult: Price, child: Option[String], infant: Option[String])
 
-case class Departure(city: String, airport: String, terminal: String, time: String)
+case class Departure(city: String, airport: String, terminal: Option[String], time: String)
 
 case class Carriers(operating: String, marketing: String)
 
-case class FlightSegments(number: Int, duration: Int, vehicle: String, availability: Int, cabin: String, booking_class: String, ancillary_services: String, carriers: Carriers, departure: Departure, baggage: Seq[], arrival: Departure, technical_stops: Seq[])
+case class BaggageExternal(amount: Int, unit_desc: String)
+
+case class Baggage (count: Int, baggage: BaggageExternal)
+
+case class FlightSegments(number: Int, duration: Int, vehicle: String, availability: Int, cabin: String, booking_class: String, ancillary_services: Option[String], carriers: Carriers, departure: Departure, baggage: Seq[Baggage], arrival: Departure, technical_stops: Option[Seq[String]])
 
 case class Flights(flight_segments: Seq[FlightSegments], duration: Int)
 
-case class Info(carrierNames: Map[String, String], vehicleNames: Map[String, String], cities: Map[String, String], airportNames: Map[String, String])
+case class Info(carrierNames: Map[String, String], vehicleNames: Map[String, String], cities: Map[String, City], airportNames: Map[String, String])
 
 case class Offers(uuid: String, price: Price, flights: Seq[Int], alliance: String, price_per_pax: PricePerPax, validating_carrier: String, refundable: Boolean)
 
 case class SearchPayload(offers: Seq[Offers], flights: Seq[Flights], info: Info)
 
-case class SearchMessage(payload: SearchPayload, trackingId: String, time: String, status: String) extends TrackMessage[SearchPayload]
+case class SearchMessage(payload: SearchPayload, detachKey: Option[String], trackingId: String, time: String, status: String) extends TrackMessage[SearchPayload]
